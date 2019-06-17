@@ -2,6 +2,6 @@
 
 module MigrationPatterns
   module Version
-    STRING = '0.0.0-rc2'
+    STRING = '0.0.0-rc3'
   end
 end
