@@ -3,7 +3,7 @@
 module MigrationPatterns
   module DatabaseHelpers
     def self.adapter_name
-      config['adapter']
+      config.adapter
     end
 
     def self.postgresql?
@@ -31,11 +31,15 @@ module MigrationPatterns
     end
 
     def self.username
-      config['username'] || ENV['USER']
+      config.username || ENV['USER']
     end
 
     def self.database_name
-      config['database']
+      config.database
+    end
+
+    def self.config
+      MigrationPatterns.configuration
     end
   end
 end

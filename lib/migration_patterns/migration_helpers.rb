@@ -55,7 +55,7 @@ module MigrationPatterns
           'in the body of your migration class'
       end
 
-      options = options.merge(algorithm: :concurrently) if Database.postgresql?
+      options = options.merge(algorithm: :concurrently) if DatabaseHelpers.postgresql?
 
       if index_exists?(table_name, column_name, options)
         Rails.logger.warn "Index not created because it already exists (this may be due to an aborted migration or similar): table_name: #{table_name}, column_name: #{column_name}"
@@ -125,7 +125,7 @@ module MigrationPatterns
 
     # Only available on Postgresql >= 9.2
     def supports_drop_index_concurrently?
-      return false unless Database.postgresql?
+      return false unless DatabaseHelpers.postgresql?
 
       version = select_one("SELECT current_setting('server_version_num') AS v")['v'].to_i
 
@@ -150,7 +150,7 @@ module MigrationPatterns
       # While MySQL does allow disabling of foreign keys it has no equivalent
       # of PostgreSQL's "VALIDATE CONSTRAINT". As a result we'll just fall
       # back to the normal foreign key procedure.
-      if Database.mysql?
+      if DatabaseHelpers.mysql?
         if foreign_key_exists?(source, target, column: column)
           Rails.logger.warn 'Foreign key not created because it exists already ' \
             '(this may be due to an aborted migration or similar): ' \
@@ -230,7 +230,7 @@ module MigrationPatterns
     # or `RESET ALL` is executed
     def disable_statement_timeout
       # bypass disabled_statement logic when not using postgres, but still execute block when one is given
-      unless Database.postgresql?
+      unless DatabaseHelpers.postgresql?
         yield if block_given?
 
         return
@@ -261,11 +261,11 @@ module MigrationPatterns
     end
 
     def true_value
-      Database.true_value
+      DatabaseHelpers.true_value
     end
 
     def false_value
-      Database.false_value
+      DatabaseHelpers.false_value
     end
 
     # Updates the value of a column in batches.
@@ -482,7 +482,7 @@ module MigrationPatterns
       quoted_old = quote_column_name(old_column)
       quoted_new = quote_column_name(new_column)
 
-      if Database.postgresql?
+      if DatabaseHelpers.postgresql?
         install_rename_triggers_for_postgresql(trigger_name, quoted_table,
                                                quoted_old, quoted_new)
       else
@@ -531,7 +531,7 @@ module MigrationPatterns
 
       check_trigger_permissions!(table)
 
-      if Database.postgresql?
+      if DatabaseHelpers.postgresql?
         remove_rename_triggers_for_postgresql(table, trigger_name)
       else
         remove_rename_triggers_for_mysql(trigger_name)
@@ -880,7 +880,7 @@ module MigrationPatterns
       quoted_pattern = Arel::Nodes::Quoted.new(pattern.to_s)
       quoted_replacement = Arel::Nodes::Quoted.new(replacement.to_s)
 
-      if Database.mysql?
+      if DatabaseHelpers.mysql?
         locate = Arel::Nodes::NamedFunction
                  .new('locate', [quoted_pattern, column])
         insert_in_place = Arel::Nodes::NamedFunction
@@ -919,8 +919,8 @@ module MigrationPatterns
 
     def check_trigger_permissions!(table)
       unless Grant.create_and_execute_trigger?(table)
-        dbname = Database.database_name
-        user = Database.username
+        dbname = DatabaseHelpers.database_name
+        user = DatabaseHelpers.username
 
         raise <<~EOF
           Your database user is not allowed to create, drop, or execute triggers on the
@@ -1052,7 +1052,7 @@ module MigrationPatterns
       # does not find indexes without passing a column name.
       if indexes(table).map(&:name).include?(index.to_s)
         true
-      elsif Database.postgresql?
+      elsif DatabaseHelpers.postgresql?
         postgres_exists_by_name?(table, index)
       else
         false
@@ -1072,7 +1072,7 @@ module MigrationPatterns
     end
 
     def mysql_compatible_index_length
-      Database.mysql? ? 20 : nil
+      DatabaseHelpers.mysql? ? 20 : nil
     end
   end
 end

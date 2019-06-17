@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require 'migrant'
+require 'migration_patterns'
 require 'pry'
 
 # An interactive console for the Migrant gem

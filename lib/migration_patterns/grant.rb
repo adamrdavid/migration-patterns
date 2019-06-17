@@ -2,11 +2,11 @@
 
 module MigrationPatterns
   # Model that can be used for querying permissions of a SQL user.
-  class Grant < ActiveRecord::Base
-    include FromUnion
+  class Grant < ::ActiveRecord::Base
+    include MigrationPatterns::FromUnion
 
     self.table_name =
-      if Database.postgresql?
+      if ::MigrationPatterns::DatabaseHelpers.postgresql?
         'information_schema.role_table_grants'
       else
         'information_schema.schema_privileges'
@@ -15,7 +15,7 @@ module MigrationPatterns
     # Returns true if the current user can create and execute triggers on the
     # given table.
     def self.create_and_execute_trigger?(table)
-      if Database.postgresql?
+      if DatabaseHelpers.postgresql?
         # We _must not_ use quote_table_name as this will produce double
         # quotes on PostgreSQL and for "has_table_privilege" we need single
         # quotes.
@@ -41,7 +41,7 @@ module MigrationPatterns
           Grant.select(1)
             .from('information_schema.schema_privileges')
             .where("PRIVILEGE_TYPE = 'TRIGGER'")
-            .where('TABLE_SCHEMA = ?', Gitlab::Database.database_name)
+            .where('TABLE_SCHEMA = ?', DatabaseHelpers.database_name)
             .where("GRANTEE = CONCAT('\\'', REPLACE(CURRENT_USER(), '@', '\\'@\\''), '\\'')")
         ]
 
