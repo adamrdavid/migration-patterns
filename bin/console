@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'migrant'
+require 'pry'
+
+# An interactive console for the Migrant gem
+
+Pry.start
